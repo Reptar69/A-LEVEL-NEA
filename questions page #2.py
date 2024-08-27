@@ -138,6 +138,29 @@ def getHint3(qID):
     
     except sqlite3.Error:
         return print("Error retrieving hint")
+
+def getMaxMarks(qID):
+    try:
+        #connect to database
+        Qdb = sqlite3.connect('Questions.sqlite')
+        cursor = Qdb.cursor()
+        
+        #fetch image from QD from id
+        query = "SELECT maxMarks FROM Questions WHERE ID = ?"
+        cursor.execute(query, (qID,))
+        record = cursor.fetchone()
+        cursor.close()
+        Qdb.close()
+        
+        if record:
+            return record[0]
+        else:
+            return print("No Hint for ID given")
+    
+    except sqlite3.Error:
+        return print("Error retrieving hint")
+
+
 #create window for question page
 class QuestionsPage(tk.Tk):
     def __init__(self, title):
@@ -226,7 +249,7 @@ class QuestionsPage(tk.Tk):
     def loadMS(self, qID):
         binaryMSImage = getMSImage(qID)
         if binaryMSImage:
-            MSimageWindow(binaryMSImage)
+            MSimageWindow(binaryMSImage, qID)
             
         
 
@@ -257,7 +280,7 @@ class CreateQuestionCanvas(ttk.Frame):
        
 #create window that shows MS      
 class MSimageWindow(tk.Toplevel):
-    def __init__(self, binaryMSImage):
+    def __init__(self, binaryMSImage, qID):
         super().__init__()
         self.title('Mark Scheme Answer ')
         self.geometry('600x600')
@@ -265,6 +288,7 @@ class MSimageWindow(tk.Toplevel):
         self.maxsize(1000, 1000)
           
         self.binaryMSImage = binaryMSImage
+        self.qID = qID   
            
         self.canvas = self.createCanvas()
            
@@ -275,8 +299,14 @@ class MSimageWindow(tk.Toplevel):
         self.marksEntry = tk.Entry(self)
         self.marksEntry.place(x = 350, y = 500)
         
-        self.marksButton = ttk.Button(self, text = "Marks Achieved", command = self.test)
-        self.marksButton.place(x = 500, y = 500)
+        
+        AttemptMarks = getMaxMarks(self.qID)
+        maxAttemptMarks = AttemptMarks - 1
+        self.marksButton = ttk.Spinbox(self, from_=0, to=maxAttemptMarks )
+        
+        
+        #self.marksButton = ttk.Button(self, text = "Marks Achieved", command = self.test)
+        self.marksButton.place(x = 100, y = 500)
         
         self.tryAgainButton = ttk.Button(self, text = "Try again", command = self.tryAgain)
         self.tryAgainButton.place(x = 200 ,y = 200 )
@@ -318,3 +348,4 @@ QuestionsPage('Question Page')
 #INCLUDE A TIMER
 
         
+
